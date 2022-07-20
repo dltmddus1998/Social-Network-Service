@@ -1,0 +1,31 @@
+{
+  "name": "social-network-service",
+  "version": "1.0.0",
+  "description": "SNS 백엔드 서비스 구현",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon app",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dltmddus1998/Social-Network-Service.git"
+  },
+  "author": "lsy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dltmddus1998/Social-Network-Service/issues"
+  },
+  "homepage": "https://github.com/dltmddus1998/Social-Network-Service#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-async-errors": "^3.1.1",
+    "helmet": "^5.1.0",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "^1.10.0",
+    "sequelize": "^6.21.3"
+  }
+}
