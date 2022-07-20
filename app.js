@@ -5,6 +5,11 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import usersRouter from './routes/users.router.js';
 import tweetsRouter from './routes/tweets.router.js';
+import { sequelize } from './db/database.js';
+import { config } from './config.js';
+import { User } from './data/users.js';
+import { Tweet } from './data/tweets.js';
+import { HashTag } from './data/hashTags.js';
 dotenv.config();
 
 const app = express();
@@ -26,8 +31,8 @@ app.use((error, req, res, next) => {
     res.sendStatus(500);
 });
 
-const port = 3000 || process.env.PORT;
-
-app.listen(port, () => {
-    console.log(`SERVER listening on port ${port}`);
-})
+sequelize.sync().then((client) => {
+    app.listen(config.host.port, () => {
+        console.log("서버 연결 완료!!")
+    });
+});
