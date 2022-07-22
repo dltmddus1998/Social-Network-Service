@@ -26,3 +26,15 @@ export const User = sequelize.define('user', {
         allowNull: false,
     },
 });
+
+export async function findByUserId(userId) {
+    return User.findOne({ where: { userId } });
+}
+
+export async function findById(id) {
+    return User.findByPk(id);
+}
+
+export async function createUser(user) {
+    return User.create(user).then(data => data.dataValues.id);
+}
