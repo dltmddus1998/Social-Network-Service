@@ -1,4 +1,4 @@
-import SQ from 'sequelize';
+import SQ, { Op } from 'sequelize';
 import { sequelize } from '../db/database.js';
 import { User } from './users.js';
 import { HashTag } from './hashTags.js';
@@ -60,8 +60,40 @@ const INCLUDE_USER = {
     },
 };
 
+const LIST_EXIST = {
+    where: { deleted: false },
+}
+
 const ORDER_DESC = {
     order: [['createdAt', 'DESC']],
+}
+
+const ORDER_DESC_VIEWS = {
+    order: [['views', 'DESC']],
+}
+
+const ORDER_DESC_AGREES = {
+    order: [['agrees', 'DESC']],
+}
+
+const ORDER_ASC = {
+    order: [['createdAt', 'ASC']],
+}
+
+const ORDER_ASC_VIEWS = {
+    order: [['views', 'ASC']],
+}
+
+const ORDER_ASC_AGREES = {
+    order: [['agrees', 'ASC']],
+}
+
+export async function addViews(tweetId) {
+    return Tweet.findByPk(tweetId, INCLUDE_USER)
+        .then(tweet => {
+            tweet.views++;
+            return tweet.save();
+        });
 }
 
 export async function getAllByUserId(userId) {
@@ -75,8 +107,76 @@ export async function getAllByUserId(userId) {
     });
 }
 
-export async function getAll() {
-    return Tweet.findAll({ ...INCLUDE_USER, ...ORDER_DESC });
+export async function getAllSortedByViewsDESC() {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...ORDER_DESC_VIEWS,
+        ...LIST_EXIST,
+    })
+}
+
+export async function getAllSortedByViewsASC() {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...ORDER_ASC_VIEWS,
+        ...LIST_EXIST,
+    })
+}
+
+export async function getAllSortedByAgreesDESC() {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...ORDER_DESC_AGREES,
+        ...LIST_EXIST,
+    })
+}
+
+export async function getAllSortedByAgreesASC() {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...ORDER_ASC_AGREES,
+        ...LIST_EXIST,
+    });
+}
+
+export async function getSearchedTitleDESC(search) {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...LIST_EXIST,
+        where: {
+            title: {
+                [Op.like]: `%${search}%`,
+            },
+        },
+    });
+}
+
+export async function getSearchedTitleASC(search) {
+    
+}
+
+export async function getAllDESC() {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...ORDER_DESC,
+        ...LIST_EXIST,
+    });
+}
+
+export async function getAllASC() {
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...ORDER_ASC,
+        ...LIST_EXIST,
+    })
+}
+
+export async function getAllBySortingByCreatedAtDESC() {
+    return Tweet.findAll({ order: [['createdAt', 'DESC']] });
+}
+
+export async function getAllBySortingByCreatedAtASC() {
+    return Tweet.findAll({ order: [['createdAt', 'ASC']] });
 }
 
 export async function getById(id) {
