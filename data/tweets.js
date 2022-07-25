@@ -1,4 +1,4 @@
-import SQ, { Op } from 'sequelize';
+import SQ, { Op, where } from 'sequelize';
 import { sequelize } from '../db/database.js';
 import { User } from './users.js';
 import { HashTag } from './hashTags.js';
@@ -234,29 +234,40 @@ export async function create(title, contents, hashTag, id) {
     return await Tweet.findByPk(tweet.dataValues.tweetId, INCLUDE_USER);
 }
 
-// export async function createHashTags(hashTag) {
-//     const tweetId = await Tweet.findOne({
-//         where: 
-//     })
-//     const result = await Promise.all(
-//         hashTag.map(tag => {
-//             return HashTag.findOrCreate({
-//                 where: {
-//                     hashTags: tag.slice(1).toLowerCase()
-//                 }
-//             })
-//         }),
-//     );
-//     return await result.addTweets()
-// }
+export async function update(tweetId, title, contents, hashTag) {
+    const updatedTweetId = await Tweet.update(
+        {
+            title,
+            contents
+        },
+        {
+            where: {
+                tweetId
+            }
+        }
+    );
+    const tweet = await Tweet.findByPk(tweetId);
 
-export async function update(tweetId, title, contents) {
-    return Tweet.findByPk(tweetId, INCLUDE_USER)
-        .then(tweet => {
-            tweet.title = title;
-            tweet.contents = contents;
-            return tweet.save();
-        });
+    const result = await Promise.all(
+        hashTag.map(tag => {
+            return HashTag.findOrCreate({
+                where: {
+                    hashTags: tag.slice(1).toLowerCase()
+                }
+            })
+        })
+    )
+
+    await tweet.addHashtag(result.map(r => r[0]));
+
+    return await Tweet.findByPk(tweetId, INCLUDE_USER);
+
+    // return Tweet.findByPk(tweetId, INCLUDE_USER)
+    //     .then(tweet => {
+    //         tweet.title = title;
+    //         tweet.contents = contents;
+    //         return tweet.save();
+    //     });
 }
 
 export async function remove(tweetId) {

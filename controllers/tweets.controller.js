@@ -10,7 +10,7 @@ import * as tweetRepository from '../data/tweets.js';
  * 3. FILTERING 
  * 이부분은 해시태그를 먼저 구현하고 진행해보자.
  * (해시태그 이용하여 해당 키워드 포함한 게시물 필터링)
- * 4. PAGINATION
+ * 4. PAGINATION 
  * (1페이지 당 게시글 수 조정 가능) 
  */ 
 
@@ -52,7 +52,7 @@ export async function getTweets(req, res) {
      * 2. 아닌 경우엔 모든 리스트 홤
      */
     let data;
-    const { orderby, sortby, search, pageNum, limit } = req.query;
+    const { orderby, sortby, search, pageNum, limit, hashTags } = req.query;
 
     // 전체 리스트
     data = await (
@@ -87,6 +87,12 @@ export async function getTweets(req, res) {
         )
     }
 
+    // FILTERING - HashTags
+    if (hashTags) {
+        const hashTag = hashTags.split(',');
+        
+    }
+
     // PAGINATION
     if (pageNum > 1 && limit) {
         const offset = limit * (pageNum - 1);
@@ -103,6 +109,7 @@ export async function updateTweet(req, res) {
      */
     const tweetId = req.params.tweetNum;
     const { title, contents } = req.body;
+    const hashTag = contents.match(/#[^\s#]*/g);
     const tweet = await tweetRepository.getById(tweetId);
     if (!tweet) {
         return res.status(404).json({ message: `Tweet does not exist: ${tweetId}` });
@@ -110,7 +117,7 @@ export async function updateTweet(req, res) {
     if (tweet.dataValues.userId !== req.id) {
         return res.sendStatus(403);
     }
-    const updated = await tweetRepository.update(tweetId, title, contents);
+    const updated = await tweetRepository.update(tweetId, title, contents, hashTag);
     return res.status(200).json({
         message: '게시물이 수정됐습니다!',
         updatedTweet: updated.dataValues,
