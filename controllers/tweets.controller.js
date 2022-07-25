@@ -1,5 +1,17 @@
 import * as tweetRepository from '../data/tweets.js';
 
+/**
+ * 📌 TODO - ADVANCED 🔥
+ * 1. SORTING 
+ * (작성일, 좋아요 수, 조회수 중 하나 선택해서 정렬 / 내림차순, 오름차순 선택 가능) 
+ * 2. SEARCHING
+ * (제목 검색 (키워드))
+ * 3. FILTERING
+ * (해시태그 이용하여 해당 키워드 포함한 게시물 필터링)
+ * 4. PAGINATION
+ * (1페이지 당 게시글 수 조정 가능) 
+ */ 
+
 export async function createTweet(req, res) {
     /**
      * 기능: 게시글 생성 
@@ -21,6 +33,7 @@ export async function getTweet(req, res) {
      */
     const tweetId = req.params.tweetNum;
     const tweet = await tweetRepository.getById(tweetId);
+    await tweetRepository.addViews(tweetId);
     if (tweet) {
         return res.status(200).json(tweet);
     } else {
@@ -34,10 +47,41 @@ export async function getTweets(req, res) {
      * 1. 쿼리에 userId에 대한 검색이 포함된 경우 해당 유저가 작성한 리스트만 포함
      * 2. 아닌 경우엔 모든 리스트 홤
      */
-    const userId = req.query.userId;
-    const data = await (userId
-        ? tweetRepository.getAllByUserId(userId)
-        : tweetRepository.getAll());
+    let data;
+    const { orderby, sortby, search } = req.query;
+
+    // 전체 리스트
+    data = await (
+        orderby === 'desc' ?
+        tweetRepository.getAllDESC() : tweetRepository.getAllASC()
+    )
+    
+    // SORTING - createdAt, agrees, views
+    if (orderby === 'desc') {
+        if (sortby === 'views') {
+            data = await tweetRepository.getAllSortedByViewsDESC();
+        } else if (sortby === 'agrees') {
+            data = await tweetRepository.getAllSortedByAgreesDESC();
+        } else {
+            data = await tweetRepository.getAllDESC();
+        }
+    } else {
+        if (sortby === 'views') {
+            data = await tweetRepository.getAllSortedByViewsASC();
+        } else if (sortby === 'agrees') {
+            data = await tweetRepository.getAllSortedByAgreesASC();
+        } else {
+            data = await tweetRepository.getAllASC();
+        }
+    }
+
+    // SEARCHING - title
+    if (search) {
+        console.log(search);
+        data = await tweetRepository.getSearchedTitleDESC(search);
+        console.log(data);
+    }
+
     return res.status(200).json(data);
 }
 
