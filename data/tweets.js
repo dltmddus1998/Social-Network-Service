@@ -88,6 +88,10 @@ const ORDER_ASC_AGREES = {
     order: [['agrees', 'ASC']],
 }
 
+const LIMIT10 = {
+    limit: 10
+}
+
 export async function addViews(tweetId) {
     return Tweet.findByPk(tweetId, INCLUDE_USER)
         .then(tweet => {
@@ -100,6 +104,7 @@ export async function getAllByUserId(userId) {
     return Tweet.findAll({
         ...INCLUDE_USER,
         ...ORDER_DESC,
+        ...LIMIT10,
         include: {
             ...INCLUDE_USER.include,
             where: { userId },
@@ -112,6 +117,7 @@ export async function getAllSortedByViewsDESC() {
         ...INCLUDE_USER,
         ...ORDER_DESC_VIEWS,
         ...LIST_EXIST,
+        ...LIMIT10,
     })
 }
 
@@ -120,6 +126,7 @@ export async function getAllSortedByViewsASC() {
         ...INCLUDE_USER,
         ...ORDER_ASC_VIEWS,
         ...LIST_EXIST,
+        ...LIMIT10,
     })
 }
 
@@ -128,6 +135,7 @@ export async function getAllSortedByAgreesDESC() {
         ...INCLUDE_USER,
         ...ORDER_DESC_AGREES,
         ...LIST_EXIST,
+        ...LIMIT10,
     })
 }
 
@@ -136,6 +144,7 @@ export async function getAllSortedByAgreesASC() {
         ...INCLUDE_USER,
         ...ORDER_ASC_AGREES,
         ...LIST_EXIST,
+        ...LIMIT10,
     });
 }
 
@@ -143,6 +152,7 @@ export async function getSearchedTitleDESC(search) {
     return Tweet.findAll({
         ...INCLUDE_USER,
         ...LIST_EXIST,
+        ...ORDER_DESC,
         where: {
             title: {
                 [Op.like]: `%${search}%`,
@@ -152,7 +162,24 @@ export async function getSearchedTitleDESC(search) {
 }
 
 export async function getSearchedTitleASC(search) {
-    
+    return Tweet.findAll({
+        ...INCLUDE_USER,
+        ...LIST_EXIST,
+        ...ORDER_ASC,
+        where: {
+            title: {
+                [Op.like]: `%${search}%`,
+            },
+        },
+    });
+}
+
+export async function getPagination(limit, offset) {
+    return Tweet.findAll({
+        limit,
+        offset,
+        ...LIST_EXIST,
+    });
 }
 
 export async function getAllDESC() {
@@ -168,7 +195,7 @@ export async function getAllASC() {
         ...INCLUDE_USER,
         ...ORDER_ASC,
         ...LIST_EXIST,
-    })
+    });
 }
 
 export async function getAllBySortingByCreatedAtDESC() {
@@ -183,16 +210,45 @@ export async function getById(id) {
     return Tweet.findOne({
         where: { tweetId: id },
         ...INCLUDE_USER,
-    })
+    });
 }
 
-export async function create(title, contents, id) {
-    return Tweet.create({
+export async function create(title, contents, hashTag, id) {
+    const tweet = await Tweet.create({
         title,
         contents,
-        userId: id
-    }).then(data => getById(data.dataValues.tweetId));
+        userId: id,
+    });
+    const result = await Promise.all(
+        hashTag.map(tag => {
+            return HashTag.findOrCreate({
+                where: {
+                    hashTags: tag.slice(1).toLowerCase()
+                }
+            })
+        })
+    )
+
+    await tweet.addHashtag(result.map(r => r[0]));
+
+    return await Tweet.findByPk(tweet.dataValues.tweetId, INCLUDE_USER);
 }
+
+// export async function createHashTags(hashTag) {
+//     const tweetId = await Tweet.findOne({
+//         where: 
+//     })
+//     const result = await Promise.all(
+//         hashTag.map(tag => {
+//             return HashTag.findOrCreate({
+//                 where: {
+//                     hashTags: tag.slice(1).toLowerCase()
+//                 }
+//             })
+//         }),
+//     );
+//     return await result.addTweets()
+// }
 
 export async function update(tweetId, title, contents) {
     return Tweet.findByPk(tweetId, INCLUDE_USER)
