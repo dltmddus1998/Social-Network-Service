@@ -1,14 +1,16 @@
 import * as tweetRepository from '../data/tweets.js';
 
+
 /**
  * 📌 TODO - ADVANCED 🔥
- * 1. SORTING 
+ * 1. SORTING ☑️
  * (작성일, 좋아요 수, 조회수 중 하나 선택해서 정렬 / 내림차순, 오름차순 선택 가능) 
- * 2. SEARCHING
+ * 2. SEARCHING ☑️
  * (제목 검색 (키워드))
- * 3. FILTERING
+ * 3. FILTERING 🔺
+ * 이부분은 해시태그를 먼저 구현하고 진행해보자.
  * (해시태그 이용하여 해당 키워드 포함한 게시물 필터링)
- * 4. PAGINATION
+ * 4. PAGINATION 🔺
  * (1페이지 당 게시글 수 조정 가능) 
  */ 
 
@@ -20,10 +22,12 @@ export async function createTweet(req, res) {
      * ➡️ 해당 정보는 미들웨어의 users.js에서 토큰을 통해 req.id에 새로 저장했음
      */
     const { title, contents } = req.body;
-    const tweet = await tweetRepository.create(title, contents, req.id);
+    const hashTag = contents.match(/#[^\s#]*/g);
+    const tweet = await tweetRepository.create(title, contents, hashTag, req.id);
+
     return res.status(201).json({ 
         message: "게시물이 생성됐습니다!",
-        tweet: tweet.dataValues,
+        tweet: tweet.dataValues
     });
 }
 
@@ -48,7 +52,7 @@ export async function getTweets(req, res) {
      * 2. 아닌 경우엔 모든 리스트 홤
      */
     let data;
-    const { orderby, sortby, search } = req.query;
+    const { orderby, sortby, search, pageNum, limit, hashTags } = req.query;
 
     // 전체 리스트
     data = await (
@@ -77,10 +81,24 @@ export async function getTweets(req, res) {
 
     // SEARCHING - title
     if (search) {
-        console.log(search);
-        data = await tweetRepository.getSearchedTitleDESC(search);
-        console.log(data);
+        data = await (
+            orderby === 'desc' ?
+            tweetRepository.getSearchedTitleDESC(search) : tweetRepository.getSearchedTitleASC(search)
+        )
     }
+
+    // FILTERING - HashTags
+    if (hashTags) {
+        const hashTag = hashTags.split(',');
+        data = await tweetRepository.getFilteredDESC(hashTag);
+    }
+
+    // PAGINATION
+    if (pageNum > 1 && limit) {
+        const offset = limit * (pageNum - 1);
+        data = await tweetRepository.getPagination(offset);
+    }
+
 
     return res.status(200).json(data);
 }
@@ -91,6 +109,7 @@ export async function updateTweet(req, res) {
      */
     const tweetId = req.params.tweetNum;
     const { title, contents } = req.body;
+    const hashTag = contents.match(/#[^\s#]*/g);
     const tweet = await tweetRepository.getById(tweetId);
     if (!tweet) {
         return res.status(404).json({ message: `Tweet does not exist: ${tweetId}` });
@@ -98,7 +117,7 @@ export async function updateTweet(req, res) {
     if (tweet.dataValues.userId !== req.id) {
         return res.sendStatus(403);
     }
-    const updated = await tweetRepository.update(tweetId, title, contents);
+    const updated = await tweetRepository.update(tweetId, title, contents, hashTag);
     return res.status(200).json({
         message: '게시물이 수정됐습니다!',
         updatedTweet: updated.dataValues,
