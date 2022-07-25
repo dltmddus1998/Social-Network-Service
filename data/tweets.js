@@ -174,6 +174,24 @@ export async function getSearchedTitleASC(search) {
     });
 }
 
+export async function getFilteredDESC(hashTag) {
+    let tweets;
+    return Promise.all(
+        hashTag.map(async tag => {
+            return HashTag.findOne({
+                where: {
+                    hashTags: tag
+                }
+            }).then(async hashtag => {
+                if (hashtag) {
+                    tweets = await hashtag.getTweets();
+                    return tweets;
+                }
+            })
+        })
+    );
+}
+
 export async function getPagination(limit, offset) {
     return Tweet.findAll({
         limit,
@@ -235,7 +253,7 @@ export async function create(title, contents, hashTag, id) {
 }
 
 export async function update(tweetId, title, contents, hashTag) {
-    const updatedTweetId = await Tweet.update(
+    await Tweet.update(
         {
             title,
             contents

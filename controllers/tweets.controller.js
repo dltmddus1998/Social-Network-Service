@@ -7,10 +7,10 @@ import * as tweetRepository from '../data/tweets.js';
  * (작성일, 좋아요 수, 조회수 중 하나 선택해서 정렬 / 내림차순, 오름차순 선택 가능) 
  * 2. SEARCHING ☑️
  * (제목 검색 (키워드))
- * 3. FILTERING 
+ * 3. FILTERING 🔺
  * 이부분은 해시태그를 먼저 구현하고 진행해보자.
  * (해시태그 이용하여 해당 키워드 포함한 게시물 필터링)
- * 4. PAGINATION 
+ * 4. PAGINATION 🔺
  * (1페이지 당 게시글 수 조정 가능) 
  */ 
 
@@ -90,7 +90,7 @@ export async function getTweets(req, res) {
     // FILTERING - HashTags
     if (hashTags) {
         const hashTag = hashTags.split(',');
-        
+        data = await tweetRepository.getFilteredDESC(hashTag);
     }
 
     // PAGINATION
