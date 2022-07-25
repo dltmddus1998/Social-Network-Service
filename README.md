@@ -241,13 +241,18 @@ SNS 백엔드 서비스 구현
 
 # 🛠 기술 스택
 
-`Node.js`
+![image](https://img.shields.io/badge/BACK-JavaScript-%23F7DF1E?style=for-the-badge&logo=JavaScript)
 
-`Express`
+![image](https://img.shields.io/badge/BACK-Node.js-%23339933?style=for-the-badge&logo=Node.js)
 
-`Sequelize`
+![image](https://img.shields.io/badge/BACK-EXPRESS-%23000000?style=for-the-badge&logo=Express)
 
-`JWT`
+![image](https://img.shields.io/badge/BACK-Sequelize-%2352B0E7?style=for-the-badge&logo=Sequelize)
+
+![image](https://img.shields.io/badge/BACK-MySQL-%234479A1?style=for-the-badge&logo=MySQL)
+
+![image](https://img.shields.io/badge/BACK-JWT-%23000000?style=for-the-badge&logo=JSON%20Web%20Tokens)
+
 
 # 🎛 데이터베이스 모델링
 
