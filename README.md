@@ -1,6 +1,15 @@
+<div align='center'>
+    
 # Social-Network-Service
-SNS 백엔드 서비스 구현
+ SNS 백엔드 서비스 구현
 
+<p>
+    <img src="https://img.shields.io/badge/Node.js-%23339933?style=flat&logo=Swift&logoColor=white"/>
+    <img src="https://img.shields.io/badge/EXPRESS-%23000000?style=flat&logo=Express&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Sequelize-%2352B0E7?style=flat&logo=Sequelize&logoColor=white"/>
+    <img src="https://img.shields.io/badge/MySQL-%234479A1?style=flat&logo=MySQL&logoColor=white"/>
+</p>
+    
 # 💡 서비스 개요
 
 ---
@@ -9,7 +18,15 @@ SNS 백엔드 서비스 구현
 
 📌 사용자는 본 서비스에 접속하여, 게시물을 업로드하거나 다른 사람의 게시물을 확인하고, 좋아요 수를 누를 수 있다.
 
-`**개발 기간: 7.20(수) ~ 7.22(금) + a**`
+`개발 기간: 7.20(수) ~ 7.26(화) + a`
+    
+</div>
+
+<br>
+<br>
+<br>
+<br>
+<br>
 
 # ⚙️ 요구사항 분석 및 REST API 설계
 
@@ -238,6 +255,25 @@ SNS 백엔드 서비스 구현
     
     ☑️ 사용자는 1페이지 당 게시글 수 조정 가능 (default: 10건)
     
+    
+## 🗺 REST API
+
+|  | Method | route |
+| --- | --- | --- |
+| 회원가입 | POST | /users/signup |
+| 로그인 | POST | /users/signin |
+| 마이페이지 | GET | /users/me |
+| 게시글 작성 | POST | /tweets/create |
+| 게시글 수정 | PATCH | /tweets/update/:tweetId |
+| 게시글 삭제 | PATCH | /tweets/delete/:tweetId |
+| 삭제 게시글 복구 | PATCH | /tweets/revoke/:tweetId |
+| 상세 게시글 조회 | GET | /tweets/:tweetId |
+| 게시글 리스트 조회 | GET | /tweets |
+| 게시글 sorting | GET | /tweets?sortby=a&orderby=desc |
+| 게시글 searching | GET | /tweets?search=a |
+| 게시글 filtering | GET | /tweets?hashTags=a,b |
+| 게시글 pagination | GET | /tweets?pageNum=1&limit=1 |
+
 
 # 🛠 기술 스택
 
@@ -301,3 +337,130 @@ SNS 백엔드 서비스 구현
 
 ## 데이터베이스 모델링 (RDBMS)
 ![image](https://user-images.githubusercontent.com/73332608/180346668-c8b93703-2f07-4a1e-9c55-8540250081b9.png)
+
+
+# 💡 기능 개발
+
+## 💽 데이터베이스 설정
+
+✔︎ `Sequelize` , 즉 ORM을 이용하여 DB를 연동했다.
+
+```jsx
+// db/database.js
+
+import mysql from 'mysql2';
+import { config } from '../config.js';
+import SQ from 'sequelize';
+
+/**
+ * Sequelize 연동하기
+ */
+const { host, user, database, password } = config.db;
+export const sequelize = new SQ.Sequelize(database, user, password, {
+    host,
+    dialect: 'mysql',
+    logging: false,
+});
+
+```
+
+```jsx
+// data/users.js
+
+import SQ from 'sequelize';
+import { sequelize } from '../db/database.js';
+const DataTypes = SQ.DataTypes;
+
+export const User = sequelize.define('user', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true,
+    },
+    userId: {
+        type: DataTypes.STRING(128),
+        allowNull: false,
+    },
+    password: {
+        type: DataTypes.STRING(128),
+        allowNull: false,
+    },
+    userName: {
+        type: DataTypes.STRING(128),
+        allowNull: false,
+    },
+    nickName: {
+        type: DataTypes.STRING(128),
+        allowNull: false,
+    },
+});
+```
+
+```jsx
+// data/tweets.js
+
+import SQ from 'sequelize';
+import { sequelize } from '../db/database.js';
+import { User } from './users.js';
+import { HashTag } from './hashTags.js';
+const DataTypes = SQ.DataTypes;
+const Sequelize = SQ.Sequelize;
+
+export const Tweet = sequelize.define('tweet', {
+    tweetId: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true,
+    },
+    title: {
+        type: DataTypes.STRING(1024),
+        allowNull: false,
+    },
+    contents: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    views: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+    },
+    agrees: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+    },
+    deleted: {  // 삭제 여부 -> false: 존재, true: 삭제
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+    },
+});
+User.hasMany(Tweet, {foreignKey: 'userId'});
+Tweet.belongsTo(User, {foreignKey: 'userId'});
+Tweet.belongsToMany(HashTag, {as: 'hashtags', through: 'tweets_hashtags', foreignKey: 'tweetId'});
+HashTag.belongsToMany(Tweet, {as: 'tweets', through: 'tweets_hashtags', foreignKey: 'hashTagId'});
+```
+
+```jsx
+// data/hashTags.js
+import SQ from 'sequelize';
+import { sequelize } from '../db/database.js';
+const DataTypes = SQ.DataTypes;
+const Sequelize = SQ.Sequelize;
+
+export const HashTag = sequelize.define('hashtag', {
+    hashTagId: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true,
+    },
+    hashTags: {
+        type: DataTypes.STRING(128),
+        allowNull: true,
+    }
+});
+```
